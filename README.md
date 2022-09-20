@@ -16,4 +16,4 @@ The 2states folder contains two scripts to generate sequences (one at equilibriu
 Finally, there is a script to compute the characteristics of pairs of sites (for instance false positives pairs of sites). There should be a working example that runs for the inference and the computation of the characteristics (G, L, N). 
 
 ### 21 states
-This folder contains the scripts to compute the phylogenetic and network characteristics (G', L, N) and also the PPV. The scripts run with provided examples of different datasets along with scores computed using Mutual Information and plmDCA. The plmDCA inference is also performed using the ```PlmDCA``` package, as well as for the phylogenetic reweighting scheme.
+This folder contains scripts to compute the phylogenetic and network characteristics (G', L, N) and also the PPV. Scripts run with provided examples of different datasets along with scores computed using Mutual Information and plmDCA. The plmDCA inference is also performed using the ```PlmDCA``` package, as well as for the phylogenetic reweighting scheme.
