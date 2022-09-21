@@ -228,6 +228,8 @@ def ConvertDictList(Neighbors_dict):
 
 
 
+############### MAIN  ###############
+##change the input parameters below.
 
 sd = 17
 random.seed(sd)
