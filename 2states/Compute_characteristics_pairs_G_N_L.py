@@ -562,11 +562,16 @@ def FPShortestPath(fp,G, Neighbors_dict):
 
 
 
+############################# MAIN ####################################
+
+#path to the folder that contains an example of sequences to compute the G score, can be changed acccordingly.
 pathtodatafolder = './example/Gscore_computation/sequences/'
 filelist = os.listdir(pathtodatafolder)
+
+#path to the contact maps used in the paper
 pathcontacmat = './contact_maps/N200p0_02/contactmat_n200p0_02.npy'
 
-
+#path to the folder that contains the plmDCA inference of the sequences mentioned above using the plmDCA package, can be changed acccordingly.
 pathtoplmcouplingsfolder = './example/Gscore_computation/plminference/'
 couplingsfilelist = os.listdir(pathtoplmcouplingsfolder)
    
@@ -577,6 +582,8 @@ bl_apc = False
 number_generations = 11
 indextemperature = 1
 mutation = 5
+
+##path where the data is saved, everything is saved in there.
 path_save = './example/save_folder_example/'
 
 
