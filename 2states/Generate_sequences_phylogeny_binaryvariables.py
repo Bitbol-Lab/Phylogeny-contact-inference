@@ -131,18 +131,34 @@ def Generate_tree(nbr_gen):
             tree['{}/{}'.format(g,child)] = None
     return tree
 
+
+
+########################### MAIN ###########################
+
+##path to the set of sequences at equilibrium, needed for the root of the phylogeny. Here an example is taken for the input but can be changed
+##by generating another dataset of equilibrium sequences.
 path_to_eq_seq = './example/equilibrium/2022_09_14_12_24_42_Nspins200_probagraph0_02_flips300_Nchains2048_seed_17_filenbr0.h5'
+
+#number of realisations 
 number_averages = 10
+
 for nbrf in tqdm(range(0,number_averages)):
+    ##number of mutations
     # mutations_list = list(np.linspace(1,50,50, dtype = np.int))
     mutations_list = [5,10]
+    #sampling temperature (should be the same as the one used to generate the ancestor equilibrium sequence)
     Temperature = 5
+    #number of generations in the phylogeny
     number_generations = 11
+    #number of spins/sites in the graph
     number_spins = 200
     seed = 2*(nbrf+1)
     random.seed(seed)
+    #path to the contact map, here is the one used in the paper. It is the same map that generated the equilibrium ancestor sequence.
     matcontact =  np.load('./contact_maps/N200p0_02/contactmat_n200p0_02.npy')
+    #the erdos-renyi probability, to the save the parameter value.
     proba = 0.02
+    
     final_chains = np.zeros((len(mutations_list),pow(2,number_generations),number_spins),dtype = np.int8)
    
     # if you want to save every sequence in the phylogeny, change the boolean 
