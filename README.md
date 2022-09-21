@@ -11,10 +11,14 @@ Then, install the required libraries:
 ```python
 pip install -r requirements.txt
 ```
+
 ### 2 states
 The 2states folder contains two scripts to generate sequences. First, ```Generate_sequences_equilibrium_binaryvariables.py``` allows to generate independent sequences at equilibrium. Second, ```Generate_sequences_phylogeny_binaryvariables.py``` allows to generate sequences with phylogeny. Note that an equilibrium dataset is needed to generate sequences with phylogeny because an equilibrium sequence is taken as the root of the phylogeny. 
+
 Then, there is a script, ```Inference_binaryvariables.py```, for the inference task that implements the Mutual Information, Covariance and mean-field DCA methods. For plmDCA, we used the ```PlmDCA``` package (https://github.com/pagnani/PlmDCA) and saved the coupling matrix in the ```.jld``` format which is then taken as input by the script.
+
 Finally, the script ```Compute_characteristics_G_N_L.py``` computes the characteristics of pairs of sites (G, L, N). 
+
 Sequences are included in the example folder, providing a working example for the inference and the computation of the characteristics (G, L, N).
 
 ### 21 states
