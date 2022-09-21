@@ -175,7 +175,7 @@ for nbrf in tqdm(range(0,number_averages)):
             Tree = Generate_tree(number_generations)
             starting_chain = np.zeros(number_spins, dtype = np.int8)
             # start from equilibrium chain
-            starting_chain = Load_eq_sequence(path_to_eq_seq, 4.0)
+            starting_chain = Load_eq_sequence(path_to_eq_seq, Temperature)
 
             Tree['0/1'] = starting_chain
             
@@ -231,12 +231,18 @@ for nbrf in tqdm(range(0,number_averages)):
 ##### VARY temperature instead of the number of mutation, uncomment
 ##### the following section and comment the one above
 ###############################################################################
+##number of realisations 
 # number_averages = 10
+##number of mutations per branch in the phylogeny
 # number_mutations = 5
+##number of generations in the phylogeny
 # number_generations = 11
+##number of sites/spins in the graph
 # number_spins = 200
 # matcontact =  np.load('./contact_maps/N200p0_02/contactmat_n200p0_02.npy')
 # proba = 0.02
+##path to the set of sequences at equilibrium, needed for the root of the phylogeny. Here an example is taken for the input but can be changed
+##by generating another dataset of equilibrium sequences.
 # path_to_eq_seq = './example/equilibrium/2022_09_14_12_24_42_Nspins200_probagraph0_02_flips300_Nchains2048_seed_17_filenbr0.h5'
 # #change the list of temperature below
 # temperaturelist = [1,2,3,4.2,5,6,7]
@@ -256,7 +262,7 @@ for nbrf in tqdm(range(0,number_averages)):
 #             Tree = Generate_tree(number_generations)
 #             starting_chain = np.zeros(number_spins, dtype = np.int8)
 #             # start from equilibrium chain
-#             starting_chain = Load_eq_sequence(path_to_eq_seq, 4.0)
+#             starting_chain = Load_eq_sequence(path_to_eq_seq, temperature)
 #             Tree['0/1'] = starting_chain
 #             if save_chainsandmutations:
 #                 all_chains[idxt,0,:] = starting_chain
