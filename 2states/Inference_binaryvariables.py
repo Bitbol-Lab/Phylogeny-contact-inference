@@ -13,18 +13,6 @@ from numba import njit,prange,jit
 from sklearn import metrics
 from scipy.stats import entropy
 
-#specific dataset only 
-def OpenDataSingleSpinFlipDataset():
-    datafile = '/Users/nicola/Documents/Proteins/Data/SpinChainSimul/20480/2020_11_07_22_01_40_Nspins200_probagraph0975_flips3000_Nchains20480_taurange1000_startcorr1999_seed_76_matcontactT5_10samples2048chains.h5'
-    file = h5py.File(datafile,'r')
-    chains = file['Chains']
-    matrix_contact  = np.array(file['Matrix_contact'])
-    matrix_contact = np.loadtxt('/Users/nicola/Documents/Proteins/Data/Contact_matrix/mat_contact_T5.txt')
-    chains_t = np.array(chains[:,:,3000,:])
-    file.close()
-    
-    return matrix_contact, chains_t
-
 ##other dataset
 def OpenDataClusterDataset(pathdata, pathcontactmat):
     
@@ -730,11 +718,15 @@ def AUCANDTPMI(chains,temperatures,matcontact,pseudocount_mi,bl_abs,bl_apc):
     
     return tpfrac_MI_alltemps,auc_mi
 
-#########################MANY REALISATIONS#####################################
+#########################MAIN#####################################
 
+#this path is the path of the folder containing the example sequences on which the inference is performed. It should be changed accordingly.
 pathtofolder = './example/phylogeny/mutations_1_50_temperature_5_generations_11_number_spins_200_starteqchain_p0_02/'
+#path to the contact maps used in the paper.
 pathtocontactmap = './contact_maps/N200p0_02/contactmat_n200p0_02.npy'
 
+#path to the folder containing the example plmDCA couplings saved in the .jld format and the key 'couplings' should be used when saving the coupling matrix (plmDCA package)
+#or else change the key name in the function OpenJuliaFile
 pathtoplmcouplings = './example/phylogeny/plmcoupling/'
 
 pseudocount = 0.5
@@ -759,8 +751,12 @@ for f in couplingsfilelist:
 pathdata = pathtofolder + filelist[0]
 
 ###Choose the correct function
+
+###phylogeny dataset where temperature is fixed and the number of mutations is varied
 matrix_contact, _, parameters = OpenDataPhylogenyDatasetScanMfixedT(pathdata,pathtocontactmap)
+###phylogeny dataset where the number of mutations is fixed and the temperature is varied
 # matrix_contact,_,parameters = OpenDataPhylogenyDatasetScanTfixedM(pathdata, pathtocontactmap)
+###this is opens an equilibrium dataset generated with the cluster
 # matrix_contact,_,parameters = OpenDataClusterDataset(pathdata, pathtocontactmap)
 
 tpmf_manyrealisations = []
@@ -818,7 +814,7 @@ for f in tqdm(filelist):
     tpplm_manyrealisations.append(tpfraction_plm)
 
 
-
+###path of the folder where the results are saved
 path_tosave= './example/save_folder_example/'
 
 np.save(path_tosave+'tpfrac_mf.npy',tpmf_manyrealisations)
