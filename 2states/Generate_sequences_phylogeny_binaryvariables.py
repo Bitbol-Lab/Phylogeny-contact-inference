@@ -137,7 +137,7 @@ def Generate_tree(nbr_gen):
 
 ##path to the set of sequences at equilibrium, needed for the root of the phylogeny. Here an example is taken for the input but can be changed
 ##by generating another dataset of equilibrium sequences.
-path_to_eq_seq = './example/equilibrium/2022_09_14_12_24_42_Nspins200_probagraph0_02_flips300_Nchains2048_seed_17_filenbr0.h5'
+path_to_eq_seq = './example/equilibrium/2022_09_21_14_02_00_Nspins200_probagraph0_02_flips300_Nchains2048_seed_17_filenbr0.h5'
 
 #number of realisations 
 number_averages = 10
@@ -243,7 +243,7 @@ for nbrf in tqdm(range(0,number_averages)):
 # proba = 0.02
 ##path to the set of sequences at equilibrium, needed for the root of the phylogeny. Here an example is taken for the input but can be changed
 ##by generating another dataset of equilibrium sequences.
-# path_to_eq_seq = './example/equilibrium/2022_09_14_12_24_42_Nspins200_probagraph0_02_flips300_Nchains2048_seed_17_filenbr0.h5'
+# path_to_eq_seq = './example/equilibrium/2022_09_21_14_02_00_Nspins200_probagraph0_02_flips300_Nchains2048_seed_17_filenbr0.h5'
 # #change the list of temperature below
 # temperaturelist = [1,2,3,4.2,5,6,7]
 # for nbrfile in range(0,number_averages):
