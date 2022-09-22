@@ -24,4 +24,4 @@ Sequences are included in the example folder, providing a working example for th
 ### 21 states
 This folder contains scripts to compute the phylogenetic and network characteristics (G', L, N), ```Analyse_FP_realistic_sequences.py```, and the PPV of contact prediction from coevolution score matrices, ```ComputePPV_realisticseq.py```. Scripts run with provided examples of different datasets along with scores computed using Mutual Information and plmDCA. The plmDCA inference and the phylogenetic reweighting are performed using the ```PlmDCA``` package.
 
-The code to generate the sequences with 21 states can be found at https://github.com/Bitbol-Lab/Phylogeny-Partners.
+The code to generate sequences with 21 states can be found at https://github.com/Bitbol-Lab/Phylogeny-Partners.
