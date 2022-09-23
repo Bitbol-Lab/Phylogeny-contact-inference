@@ -147,21 +147,22 @@ pfam_to_pdb = {"PF00072": {"pdb": {"id": "3ilh",
 
 
 ####################### MAIN #######################
-##path to the sequences dataset generated with on the inferred tree. Here is an example dataset based on the PF72 family.
-path_tree = './data_example/Tree_data/sequences/PF00072_0.pkl'
-tree = FPanalysisPhyloData(path_tree)
-size_seq = int(tree.clade.comment.shape[0])
-dict_seq = {}
-DictionarySequences(tree.clade,dict_seq,size_seq)
-##path folder to the contacts maps. Here is the example to the experimental one of PF72 and the bmDCA inferred contact map of the same family.
-path_folder_contactmaps = './data_example/Tree_data/contactmaps/'
-keys = ["", "bmDCA", "bmDCA_FastTree_eq"]
-msaname = 'PF00072'
-##path to the example score, here the score is inferred by MI on the tree dataset of PF72.
-path_score = './data_example/Tree_data/scores/PF00072_msa_phylo_equi_bmdca_tree_0_MI_scores.npy'
-scores,bm_cm, pdb_cm, seq_prox_mask = OpenDataNew(msaname, keys[0],path_score,pfam_to_pdb,path_folder_contactmaps)
-number_contacts_bm = np.sum(bm_cm)
-scores[seq_prox_mask == 0] = -np.inf
-fpcoords,tpcoords,allcoords,scoreslist =  GenerateListFP(scores,bm_cm*1,number_contacts_bm)
-gscores = ComputeGscore(allcoords,dict_seq, tree.clade.comment)
-couplings = ListScoresFromList(allcoords,scores)
+if __name__ == '__main__':
+    ##path to the sequences dataset generated with on the inferred tree. Here is an example dataset based on the PF72 family.
+    path_tree = './data_example/Tree_data/sequences/PF00072_0.pkl'
+    tree = FPanalysisPhyloData(path_tree)
+    size_seq = int(tree.clade.comment.shape[0])
+    dict_seq = {}
+    DictionarySequences(tree.clade,dict_seq,size_seq)
+    ##path folder to the contacts maps. Here is the example to the experimental one of PF72 and the bmDCA inferred contact map of the same family.
+    path_folder_contactmaps = './data_example/Tree_data/contactmaps/'
+    keys = ["", "bmDCA", "bmDCA_FastTree_eq"]
+    msaname = 'PF00072'
+    ##path to the example score, here the score is inferred by MI on the tree dataset of PF72.
+    path_score = './data_example/Tree_data/scores/PF00072_msa_phylo_equi_bmdca_tree_0_MI_scores.npy'
+    scores,bm_cm, pdb_cm, seq_prox_mask = OpenDataNew(msaname, keys[0],path_score,pfam_to_pdb,path_folder_contactmaps)
+    number_contacts_bm = np.sum(bm_cm)
+    scores[seq_prox_mask == 0] = -np.inf
+    fpcoords,tpcoords,allcoords,scoreslist =  GenerateListFP(scores,bm_cm*1,number_contacts_bm)
+    gscores = ComputeGscore(allcoords,dict_seq, tree.clade.comment)
+    couplings = ListScoresFromList(allcoords,scores)
