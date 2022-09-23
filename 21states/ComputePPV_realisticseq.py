@@ -273,48 +273,48 @@ def PPV_FPcharact(path_score,msa_name,path_tociffolder,path_bm_cm_apc,bl_natseq)
     
 
 ########################## MAIN ##########################
+if __name__ == '__main__':
+  dist_matrix_func = calc_min_dist_matrix  # calc_Calpha_dist_matrix
+  max_eucl_dist = 8
+  min_sequence_dist = 5
+  contact_matrix_kwargs = {"max_eucl_dist": max_eucl_dist,
+                           "min_sequence_dist": min_sequence_dist}
+  ##list of the family of interest. Here all examples of the paper are listed.
+  pfamids= ['PF00072','PF00512','PF00595','PF02518']
+  ##path to the Coevolution scores given by MI and plmDCA for all examples listed above.
+  path_folders = './data_example/PPV_MI_plmDCA_scores/'
+  ##keys for the dictionary that contains the indices for the alignment between experimental and pfam sequences.
+  msa_name_list = ['PF00072','PF00512_full_no_gapped','PF00595_full_no_gapped','PF02518']
+  ##path to the experimental structures
+  path_tociffolder = './data_example/PDB_structures/'
+  ##path to the bmDCA scores used as contact maps for the synthetic datasets for the same families.
+  path_bm_cm_apc_folder = './data_example/bmDCA_scores/'
 
-dist_matrix_func = calc_min_dist_matrix  # calc_Calpha_dist_matrix
-max_eucl_dist = 8
-min_sequence_dist = 5
-contact_matrix_kwargs = {"max_eucl_dist": max_eucl_dist,
-                         "min_sequence_dist": min_sequence_dist}
-##list of the family of interest. Here all examples of the paper are listed.
-pfamids= ['PF00072','PF00512','PF00595','PF02518']
-##path to the Coevolution scores given by MI and plmDCA for all examples listed above.
-path_folders = './data_example/PPV_MI_plmDCA_scores/'
-##keys for the dictionary that contains the indices for the alignment between experimental and pfam sequences.
-msa_name_list = ['PF00072','PF00512_full_no_gapped','PF00595_full_no_gapped','PF02518']
-##path to the experimental structures
-path_tociffolder = './data_example/PDB_structures/'
-##path to the bmDCA scores used as contact maps for the synthetic datasets for the same families.
-path_bm_cm_apc_folder = './data_example/bmDCA_scores/'
 
+  bl_natseq = True
+  ##following lists provide the desired options for the ppv on contact prediction, if an option is not desired 
+  ##it should removed from the list. For instance, if only the scores with APC and no phylogenetic weights are desired
+  ##then the two corresponding lists should be modified to apcstr = ['APC'] and phyloweights = ['NOphyloweights'].
+  ## By default the inference is done with every option for each dataset on each studied protein family using plmDCA scores.
+  apcstr = ['NOAPC','APC']
+  phyloweights = ['NOphyloweights','phyloweights']
+  dataset = ['NAT','bmDCAEQUI','bmDCATREE']
+  pfamids= ['PF00072','PF00512','PF00595','PF02518']
+  bl_natseqs = [True,False,False]
+  #choose the inference method either 'plmDCA' or 'MI'
+  inf_method = 'plmDCA'
+  print('Inference done with ',inf_method)
+  for idxpfam,pfam in enumerate(pfamids):   
+      for weights in phyloweights:
+          for apc in apcstr:
+              for idx_d,d in enumerate(dataset):
+                  path_score = path_folders+pfam+'/'+inf_method+'/{}_{}_scores_{}_{}.npy'.format(pfam, d,weights,apc)
+                  path_bm_cm_apc = path_bm_cm_apc_folder+pfam+'_bmDCA_scores_apc.npy'
+                  cm,fpcoords,tpcoords,lgthsp,nsp,npred = PPV_FPcharact(path_score,msa_name_list[idxpfam],path_tociffolder,path_bm_cm_apc,bl_natseqs[idx_d])
+                  val,cts = np.unique(lgthsp,return_counts = True)
+                  print('dataset:',d,' pfam:',pfam,  ' reweighting: ',weights, ' apc: ',apc)
+                  print('PPV = {:.2f}'.format(len(tpcoords)/(len(tpcoords)+len(fpcoords))), 'Number of indirect fp: {}'.format(cts[val==3]))
+                  print('number of contacts: ', npred, ' ',len(tpcoords)+len(fpcoords))
 
-bl_natseq = True
-##following lists provide the desired options for the ppv on contact prediction, if an option is not desired 
-##it should removed from the list. For instance, if only the scores with APC and no phylogenetic weights are desired
-##then the two corresponding lists should be modified to apcstr = ['APC'] and phyloweights = ['NOphyloweights'].
-## By default the inference is done with every option for each dataset on each studied protein family using plmDCA scores.
-apcstr = ['NOAPC','APC']
-phyloweights = ['NOphyloweights','phyloweights']
-dataset = ['NAT','bmDCAEQUI','bmDCATREE']
-pfamids= ['PF00072','PF00512','PF00595','PF02518']
-bl_natseqs = [True,False,False]
-#choose the inference method either 'plmDCA' or 'MI'
-inf_method = 'plmDCA'
-print('Inference done with ',inf_method)
-for idxpfam,pfam in enumerate(pfamids):   
-    for weights in phyloweights:
-        for apc in apcstr:
-            for idx_d,d in enumerate(dataset):
-                path_score = path_folders+pfam+'/'+inf_method+'/{}_{}_scores_{}_{}.npy'.format(pfam, d,weights,apc)
-                path_bm_cm_apc = path_bm_cm_apc_folder+pfam+'_bmDCA_scores_apc.npy'
-                cm,fpcoords,tpcoords,lgthsp,nsp,npred = PPV_FPcharact(path_score,msa_name_list[idxpfam],path_tociffolder,path_bm_cm_apc,bl_natseqs[idx_d])
-                val,cts = np.unique(lgthsp,return_counts = True)
-                print('dataset:',d,' pfam:',pfam,  ' reweighting: ',weights, ' apc: ',apc)
-                print('PPV = {:.2f}'.format(len(tpcoords)/(len(tpcoords)+len(fpcoords))), 'Number of indirect fp: {}'.format(cts[val==3]))
-                print('number of contacts: ', npred, ' ',len(tpcoords)+len(fpcoords))
-                                
                              
                                 
