@@ -229,63 +229,65 @@ def ConvertDictList(Neighbors_dict):
 
 
 ############### MAIN  ###############
-##change the input parameters below.
+if __name__ == '__main__':
 
-sd = 17
-random.seed(sd)
-#number of nodes in graph
-number_spin = 200
-#probability of connecting nodes in the graph
-prob_graph = 0.02
+    ##change the input parameters below.
 
-#to generate a new graph uncomment the following line 
-# matcontact = GenerateMatcontact(number_spin, prob_graph)
-matcontact = np.load('./contact_maps/N200p0_02/contactmat_n200p0_02.npy')
+    sd = 17
+    random.seed(sd)
+    #number of nodes in graph
+    number_spin = 200
+    #probability of connecting nodes in the graph
+    prob_graph = 0.02
 
-# create a dictionary where each site contains a list of its neighbors
-Neighbors_dict = {site: FindNeighbors(site, matcontact, number_spin) for site in range(0,number_spin)}
-# number of different chains to take then average.
-number_chains = 2048
-# number of cluster flips, for each flip a new cluster is built. (not all of the same size)
-number_flips = 300
-# temperature list
-Temperature = list(np.linspace(4,5,2))
+    #to generate a new graph uncomment the following line 
+    # matcontact = GenerateMatcontact(number_spin, prob_graph)
+    matcontact = np.load('./contact_maps/N200p0_02/contactmat_n200p0_02.npy')
 
-number_averages = 1
+    # create a dictionary where each site contains a list of its neighbors
+    Neighbors_dict = {site: FindNeighbors(site, matcontact, number_spin) for site in range(0,number_spin)}
+    # number of different chains to take then average.
+    number_chains = 2048
+    # number of cluster flips, for each flip a new cluster is built. (not all of the same size)
+    number_flips = 300
+    # temperature list
+    Temperature = list(np.linspace(4,5,2))
 
-list_neighbours = ConvertDictList(Neighbors_dict)
-Temperature_temp = np.array(Temperature)
-from tqdm import tqdm
-for nbf in tqdm(range(0,number_averages)):
+    number_averages = 1
 
-    startTime = datetime.now()
-    today = date.today()
-    # create an hdf file to save the data 
-    date1 = today.strftime("%Y_%m_%d_")
-    hour = startTime.strftime('%H_%M_%S_')
-    path_save = './example/save_folder_example/'
-    filename = path_save+date1+hour+'Nspins{}_probagraph{}_flips{}_Nchains{}_seed_{}_filenbr{}.h5'.format(number_spin,str(prob_graph).replace('.','_'), number_flips, number_chains, sd, nbf)
-    file = h5py.File(filename, 'w')
-    file.close()
-    
-    
-    parameters = 'Parameters: Number of spins = {}, Number of chains = {}, Number of flips = {}, probability graph = {}, Temperature(s) = {}, seed = {}'.format(number_spin, number_chains,number_flips, prob_graph,Temperature, sd)
-    para = [number_spin, prob_graph, number_chains, number_flips, number_averages]
-    
-    file = h5py.File(filename, 'r+')
-    
-    para_arr = np.array(para)
-    
-    file.create_dataset('Parameters', data = para_arr[:])
-    file.create_dataset('Matrix_contact', data = matcontact)
-    file.create_dataset('Temperatures', data = Temperature_temp)
-    
-    file.close()
-    
-    fchains = FctToParalllel(Temperature,number_spin, list_neighbours,number_chains,number_flips)
-    
-    file = h5py.File(filename, 'r+')
-    file.create_dataset('Chains', data = fchains, dtype = np.int8,compression='gzip', compression_opts=9)
+    list_neighbours = ConvertDictList(Neighbors_dict)
+    Temperature_temp = np.array(Temperature)
+    from tqdm import tqdm
+    for nbf in tqdm(range(0,number_averages)):
 
-    file.close()
+        startTime = datetime.now()
+        today = date.today()
+        # create an hdf file to save the data 
+        date1 = today.strftime("%Y_%m_%d_")
+        hour = startTime.strftime('%H_%M_%S_')
+        path_save = './example/save_folder_example/'
+        filename = path_save+date1+hour+'Nspins{}_probagraph{}_flips{}_Nchains{}_seed_{}_filenbr{}.h5'.format(number_spin,str(prob_graph).replace('.','_'), number_flips, number_chains, sd, nbf)
+        file = h5py.File(filename, 'w')
+        file.close()
+
+
+        parameters = 'Parameters: Number of spins = {}, Number of chains = {}, Number of flips = {}, probability graph = {}, Temperature(s) = {}, seed = {}'.format(number_spin, number_chains,number_flips, prob_graph,Temperature, sd)
+        para = [number_spin, prob_graph, number_chains, number_flips, number_averages]
+
+        file = h5py.File(filename, 'r+')
+
+        para_arr = np.array(para)
+
+        file.create_dataset('Parameters', data = para_arr[:])
+        file.create_dataset('Matrix_contact', data = matcontact)
+        file.create_dataset('Temperatures', data = Temperature_temp)
+
+        file.close()
+
+        fchains = FctToParalllel(Temperature,number_spin, list_neighbours,number_chains,number_flips)
+
+        file = h5py.File(filename, 'r+')
+        file.create_dataset('Chains', data = fchains, dtype = np.int8,compression='gzip', compression_opts=9)
+
+        file.close()
 
