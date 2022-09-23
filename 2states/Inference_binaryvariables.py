@@ -719,113 +719,113 @@ def AUCANDTPMI(chains,temperatures,matcontact,pseudocount_mi,bl_abs,bl_apc):
     return tpfrac_MI_alltemps,auc_mi
 
 #########################MAIN#####################################
+if __name__ == '__main__':
+    #this path is the path of the folder containing the example sequences on which the inference is performed. It should be changed accordingly.
+    pathtofolder = './example/phylogeny/mutations_1_50_temperature_5_generations_11_number_spins_200_starteqchain_p0_02/'
+    #path to the contact maps used in the paper.
+    pathtocontactmap = './contact_maps/N200p0_02/contactmat_n200p0_02.npy'
 
-#this path is the path of the folder containing the example sequences on which the inference is performed. It should be changed accordingly.
-pathtofolder = './example/phylogeny/mutations_1_50_temperature_5_generations_11_number_spins_200_starteqchain_p0_02/'
-#path to the contact maps used in the paper.
-pathtocontactmap = './contact_maps/N200p0_02/contactmat_n200p0_02.npy'
+    #path to the folder containing the example plmDCA couplings saved in the .jld format and the key 'couplings' should be used when saving the coupling matrix (plmDCA package)
+    #or else change the key name in the function OpenJuliaFile
+    pathtoplmcouplings = './example/phylogeny/plmcoupling/'
 
-#path to the folder containing the example plmDCA couplings saved in the .jld format and the key 'couplings' should be used when saving the coupling matrix (plmDCA package)
-#or else change the key name in the function OpenJuliaFile
-pathtoplmcouplings = './example/phylogeny/plmcoupling/'
+    pseudocount = 0.5
+    pseudocount_mi = 0.01
 
-pseudocount = 0.5
-pseudocount_mi = 0.01
+    bl_abs = True
+    bl_frob = True
+    bl_apc = True
 
-bl_abs = True
-bl_frob = True
-bl_apc = True
-
-filelist = os.listdir(pathtofolder)
-for f in filelist:
-    if f.startswith('.'):
-        filelist.remove(f)
-        
-
-couplingsfilelist = os.listdir(pathtoplmcouplings)
-for f in couplingsfilelist:
-    if f.startswith('.'):
-        couplingsfilelist.remove(f)
-        
-
-pathdata = pathtofolder + filelist[0]
-
-###Choose the correct function
-
-###phylogeny dataset where temperature is fixed and the number of mutations is varied
-matrix_contact, _, parameters = OpenDataPhylogenyDatasetScanMfixedT(pathdata,pathtocontactmap)
-###phylogeny dataset where the number of mutations is fixed and the temperature is varied
-# matrix_contact,_,parameters = OpenDataPhylogenyDatasetScanTfixedM(pathdata, pathtocontactmap)
-###this is opens an equilibrium dataset generated with the cluster
-# matrix_contact,_,parameters = OpenDataClusterDataset(pathdata, pathtocontactmap)
-
-tpmf_manyrealisations = []
-tpcorr_manyrealisations =[]
-tpplm_manyrealisations = []
-
-AUCmf_manyrealisations = []
-AUCcorr_manyrealisations =[]
-AUCplm_manyrealisations = []
-
-TPMI_manyrealisations = []
-AUCMI_manyrealisations = []
-
-from tqdm import tqdm
-for f in tqdm(filelist):
-    pathtofile = pathtofolder + f
-    
-    nbrfile = f[f.find('filenbr')+len('filenbr'):f.find('.')]
-    strtofind = 'filenbr' + nbrfile + '.'
-    filecoupling = ''
-    
-    for ftmp in couplingsfilelist:
-        if strtofind in ftmp:
-            filecoupling = ftmp
-    
-    pathtocoupling = pathtoplmcouplings + filecoupling
- 
-    Jtensor = OpenJuliaFile(pathtocoupling)
-    
-
-    
-    
-    _, chains_parameters, _ = OpenDataPhylogenyDatasetScanMfixedT(pathtofile,pathtocontactmap)
-    
-    # newmsa = InvertSpinsDirection(chains_parameters)
-    
-
-    tpfraction_mf, tpfraction_corr = TPfractionNcontactvsTemperature(chains_parameters,parameters,matrix_contact,pseudocount,bl_abs,bl_apc)
-    auc_mf,auc_corr = ComputeAUCOneparameter(chains_parameters, parameters, matrix_contact, pseudocount,bl_abs,bl_apc)
-
-    tpmi,aucmi = AUCANDTPMI(chains_parameters,parameters,matrix_contact,pseudocount_mi,False,bl_apc)
-    
-    TPMI_manyrealisations.append(tpmi)
-    AUCMI_manyrealisations.append(aucmi)    
-    
-    auc_plm,tpfraction_plm = InferPLMDCAVSParameter(Jtensor, parameters, matrix_contact, bl_frob,bl_apc)
-
-    tpmf_manyrealisations.append(tpfraction_mf)
-    tpcorr_manyrealisations.append(tpfraction_corr)
-    
-    AUCmf_manyrealisations.append(auc_mf)
-    AUCcorr_manyrealisations.append(auc_corr)
-    
-    AUCplm_manyrealisations.append(auc_plm)
-    tpplm_manyrealisations.append(tpfraction_plm)
+    filelist = os.listdir(pathtofolder)
+    for f in filelist:
+        if f.startswith('.'):
+            filelist.remove(f)
 
 
-###path of the folder where the results are saved
-path_tosave= './example/save_folder_example/'
+    couplingsfilelist = os.listdir(pathtoplmcouplings)
+    for f in couplingsfilelist:
+        if f.startswith('.'):
+            couplingsfilelist.remove(f)
 
-np.save(path_tosave+'tpfrac_mf.npy',tpmf_manyrealisations)
-np.save(path_tosave+'tpfrac_corr.npy',tpcorr_manyrealisations)
-np.save(path_tosave+'tpfrac_plm.npy',tpplm_manyrealisations)
-np.save(path_tosave+'tpfrac_mi.npy',TPMI_manyrealisations)
 
-np.save(path_tosave+'auc_mf.npy',AUCmf_manyrealisations)
-np.save(path_tosave+'auc_corr.npy',AUCcorr_manyrealisations)
-np.save(path_tosave+'auc_plm.npy',AUCplm_manyrealisations)
-np.save(path_tosave+'auc_mi.npy',AUCMI_manyrealisations)
+    pathdata = pathtofolder + filelist[0]
+
+    ###Choose the correct function
+
+    ###phylogeny dataset where temperature is fixed and the number of mutations is varied
+    matrix_contact, _, parameters = OpenDataPhylogenyDatasetScanMfixedT(pathdata,pathtocontactmap)
+    ###phylogeny dataset where the number of mutations is fixed and the temperature is varied
+    # matrix_contact,_,parameters = OpenDataPhylogenyDatasetScanTfixedM(pathdata, pathtocontactmap)
+    ###this is opens an equilibrium dataset generated with the cluster
+    # matrix_contact,_,parameters = OpenDataClusterDataset(pathdata, pathtocontactmap)
+
+    tpmf_manyrealisations = []
+    tpcorr_manyrealisations =[]
+    tpplm_manyrealisations = []
+
+    AUCmf_manyrealisations = []
+    AUCcorr_manyrealisations =[]
+    AUCplm_manyrealisations = []
+
+    TPMI_manyrealisations = []
+    AUCMI_manyrealisations = []
+
+    from tqdm import tqdm
+    for f in tqdm(filelist):
+        pathtofile = pathtofolder + f
+
+        nbrfile = f[f.find('filenbr')+len('filenbr'):f.find('.')]
+        strtofind = 'filenbr' + nbrfile + '.'
+        filecoupling = ''
+
+        for ftmp in couplingsfilelist:
+            if strtofind in ftmp:
+                filecoupling = ftmp
+
+        pathtocoupling = pathtoplmcouplings + filecoupling
+
+        Jtensor = OpenJuliaFile(pathtocoupling)
+
+
+
+
+        _, chains_parameters, _ = OpenDataPhylogenyDatasetScanMfixedT(pathtofile,pathtocontactmap)
+
+        # newmsa = InvertSpinsDirection(chains_parameters)
+
+
+        tpfraction_mf, tpfraction_corr = TPfractionNcontactvsTemperature(chains_parameters,parameters,matrix_contact,pseudocount,bl_abs,bl_apc)
+        auc_mf,auc_corr = ComputeAUCOneparameter(chains_parameters, parameters, matrix_contact, pseudocount,bl_abs,bl_apc)
+
+        tpmi,aucmi = AUCANDTPMI(chains_parameters,parameters,matrix_contact,pseudocount_mi,False,bl_apc)
+
+        TPMI_manyrealisations.append(tpmi)
+        AUCMI_manyrealisations.append(aucmi)    
+
+        auc_plm,tpfraction_plm = InferPLMDCAVSParameter(Jtensor, parameters, matrix_contact, bl_frob,bl_apc)
+
+        tpmf_manyrealisations.append(tpfraction_mf)
+        tpcorr_manyrealisations.append(tpfraction_corr)
+
+        AUCmf_manyrealisations.append(auc_mf)
+        AUCcorr_manyrealisations.append(auc_corr)
+
+        AUCplm_manyrealisations.append(auc_plm)
+        tpplm_manyrealisations.append(tpfraction_plm)
+
+
+    ###path of the folder where the results are saved
+    path_tosave= './example/save_folder_example/'
+
+    np.save(path_tosave+'tpfrac_mf.npy',tpmf_manyrealisations)
+    np.save(path_tosave+'tpfrac_corr.npy',tpcorr_manyrealisations)
+    np.save(path_tosave+'tpfrac_plm.npy',tpplm_manyrealisations)
+    np.save(path_tosave+'tpfrac_mi.npy',TPMI_manyrealisations)
+
+    np.save(path_tosave+'auc_mf.npy',AUCmf_manyrealisations)
+    np.save(path_tosave+'auc_corr.npy',AUCcorr_manyrealisations)
+    np.save(path_tosave+'auc_plm.npy',AUCplm_manyrealisations)
+    np.save(path_tosave+'auc_mi.npy',AUCMI_manyrealisations)
 
 
 
