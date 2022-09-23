@@ -134,177 +134,177 @@ def Generate_tree(nbr_gen):
 
 
 ########################### MAIN ###########################
+if __name__ == '__main__':
+    ##path to the set of sequences at equilibrium, needed for the root of the phylogeny. Here an example is taken for the input but can be changed
+    ##by generating another dataset of equilibrium sequences.
+    path_to_eq_seq = './example/equilibrium/2022_09_21_14_02_00_Nspins200_probagraph0_02_flips300_Nchains2048_seed_17_filenbr0.h5'
 
-##path to the set of sequences at equilibrium, needed for the root of the phylogeny. Here an example is taken for the input but can be changed
-##by generating another dataset of equilibrium sequences.
-path_to_eq_seq = './example/equilibrium/2022_09_21_14_02_00_Nspins200_probagraph0_02_flips300_Nchains2048_seed_17_filenbr0.h5'
+    #number of realisations 
+    number_averages = 10
 
-#number of realisations 
-number_averages = 10
+    for nbrf in tqdm(range(0,number_averages)):
+        ##number of mutations
+        # mutations_list = list(np.linspace(1,50,50, dtype = np.int))
+        mutations_list = [5,10]
+        #sampling temperature (should be the same as the one used to generate the ancestor equilibrium sequence)
+        Temperature = 5
+        #number of generations in the phylogeny
+        number_generations = 11
+        #number of spins/sites in the graph
+        number_spins = 200
+        seed = 2*(nbrf+1)
+        random.seed(seed)
+        #path to the contact map, here is the one used in the paper. It is the same map that generated the equilibrium ancestor sequence.
+        matcontact =  np.load('./contact_maps/N200p0_02/contactmat_n200p0_02.npy')
+        #the erdos-renyi probability, to the save the parameter value.
+        proba = 0.02
 
-for nbrf in tqdm(range(0,number_averages)):
-    ##number of mutations
-    # mutations_list = list(np.linspace(1,50,50, dtype = np.int))
-    mutations_list = [5,10]
-    #sampling temperature (should be the same as the one used to generate the ancestor equilibrium sequence)
-    Temperature = 5
-    #number of generations in the phylogeny
-    number_generations = 11
-    #number of spins/sites in the graph
-    number_spins = 200
-    seed = 2*(nbrf+1)
-    random.seed(seed)
-    #path to the contact map, here is the one used in the paper. It is the same map that generated the equilibrium ancestor sequence.
-    matcontact =  np.load('./contact_maps/N200p0_02/contactmat_n200p0_02.npy')
-    #the erdos-renyi probability, to the save the parameter value.
-    proba = 0.02
-    
-    final_chains = np.zeros((len(mutations_list),pow(2,number_generations),number_spins),dtype = np.int8)
-   
-    # if you want to save every sequence in the phylogeny, change the boolean 
-    # variable below. Useful for the G score computation.
-    save_chainsandmutations = False
-    if save_chainsandmutations:
-        all_chains = np.zeros((len(mutations_list),2*pow(2,number_generations)-1,number_spins))  
-        savedmutations_list = np.zeros((len(mutations_list),2*pow(2,number_generations)-2, number_mutations))
-        
-    for idxm, mut in enumerate(mutations_list):
-            date = today.strftime("%Y_%m_%d_")
-            hour = startTime.strftime('%H_%M_%S_')
-            number_mutations = mut
-            Tree = Generate_tree(number_generations)
-            starting_chain = np.zeros(number_spins, dtype = np.int8)
-            # start from equilibrium chain
-            starting_chain = Load_eq_sequence(path_to_eq_seq, Temperature)
+        final_chains = np.zeros((len(mutations_list),pow(2,number_generations),number_spins),dtype = np.int8)
 
-            Tree['0/1'] = starting_chain
-            
-            if save_chainsandmutations:
-                all_chains[idxm,0,:] = starting_chain
-                
-                ct = 0
-            for g in range(1,number_generations+1):
-                
-                list_parents = np.linspace(1,pow(2,g-1),pow(2,g-1), dtype = np.int16)
-                # print('Generation',g)
-                for parent in list_parents:
-                    # print('parent',parent)
-                    chain = Tree['{}/{}'.format(g-1,parent)]
-                    newchain1,ml1 = Mutate(chain.copy(), number_mutations, Temperature, matcontact)
-                    newchain2,ml2 = Mutate(chain.copy(), number_mutations, Temperature, matcontact)
+        # if you want to save every sequence in the phylogeny, change the boolean 
+        # variable below. Useful for the G score computation.
+        save_chainsandmutations = False
+        if save_chainsandmutations:
+            all_chains = np.zeros((len(mutations_list),2*pow(2,number_generations)-1,number_spins))  
+            savedmutations_list = np.zeros((len(mutations_list),2*pow(2,number_generations)-2, number_mutations))
 
-                    if save_chainsandmutations:
-                        all_chains[idxm,ct+1,:] = newchain1
-                        all_chains[idxm,ct+2,:] = newchain2
-                        savedmutations_list[idxm,ct,:] = ml1[:]
-                        savedmutations_list[idxm,ct+1,:] = ml2[:]
-                        ct = ct+2
-                    
-                    Tree['{}/{}'.format(g,2*parent-1)] = newchain1
-                    Tree['{}/{}'.format(g,2*parent)] = newchain2
-                    
-    
-            for index_chain, child in enumerate(list(np.linspace(1,pow(2,number_generations),pow(2,number_generations),dtype = np.int16))):
-                final_chains[idxm,index_chain,:] = Tree['{}/{}'.format(number_generations,child)]
-                        
-    ##########SAVE CHAINS, CREATES FOLDER IF NOT EXISTING FOR THE PARAMETERSs#######################
-    
-    path_store_data = './example/save_folder_example/'
-    folderpath = path_store_data + 'mutations_{}_{}_temperature_{}_generations_{}_number_spins_{}_starteqchain_p{}/'.format(int(min(mutations_list)),int(max(mutations_list)),int(Temperature),int(number_generations),int(number_spins),str(proba).replace('.','_'))
-    if not os.path.exists(folderpath):
-        os.makedirs(folderpath)
-    filename = folderpath + 'mutations_{}_{}_temperature_{}_generations_{}_number_spins_{}_starteqchain_p{}_seed{}_filenbr{}.h5'.format(int(min(mutations_list)),int(max(mutations_list)),int(Temperature),int(number_generations),int(number_spins),str(proba).replace('.','_'),int(seed),nbrf)
-    file = h5py.File(filename, 'w')
-    file.close()
-    para = [number_spins, Temperature, number_generations,seed,proba]
-    file = h5py.File(filename, 'r+')
-    file.create_dataset('Parameters', data = np.array(para))
-    file.create_dataset('Matrix_contact', data = matcontact)
-    file.create_dataset('Chains', data = final_chains, compression='gzip', compression_opts=9)
-    file.create_dataset('Mutations', data = np.array(mutations_list))
-    if save_chainsandmutations:
-        file.create_dataset('allchains', data = all_chains, compression='gzip', compression_opts=9)
-        file.create_dataset('mutations', data = mutations_list, compression='gzip', compression_opts=9)
-    file.close()
+        for idxm, mut in enumerate(mutations_list):
+                date = today.strftime("%Y_%m_%d_")
+                hour = startTime.strftime('%H_%M_%S_')
+                number_mutations = mut
+                Tree = Generate_tree(number_generations)
+                starting_chain = np.zeros(number_spins, dtype = np.int8)
+                # start from equilibrium chain
+                starting_chain = Load_eq_sequence(path_to_eq_seq, Temperature)
 
-###############################################################################            
-##### VARY temperature instead of the number of mutation, uncomment
-##### the following section and comment the one above
-###############################################################################
-##number of realisations 
-# number_averages = 10
-##number of mutations per branch in the phylogeny
-# number_mutations = 5
-##number of generations in the phylogeny
-# number_generations = 11
-##number of sites/spins in the graph
-# number_spins = 200
-# matcontact =  np.load('./contact_maps/N200p0_02/contactmat_n200p0_02.npy')
-# proba = 0.02
-##path to the set of sequences at equilibrium, needed for the root of the phylogeny. Here an example is taken for the input but can be changed
-##by generating another dataset of equilibrium sequences.
-# path_to_eq_seq = './example/equilibrium/2022_09_21_14_02_00_Nspins200_probagraph0_02_flips300_Nchains2048_seed_17_filenbr0.h5'
-# #change the list of temperature below
-# temperaturelist = [1,2,3,4.2,5,6,7]
-# for nbrfile in range(0,number_averages):
-#     seed = 3*(nbrfile+1)
-#     random.seed(seed)
-#     final_chains = np.zeros((len(temperaturelist),pow(2,number_generations),number_spins),dtype = np.int8)
-    
-#     save_chainsandmutations = False
-#     if save_chainsandmutations:
-#         all_chains = np.zeros((len(temperaturelist),2*pow(2,number_generations)-1,number_spins))  
-#         # savedmutations_list = np.zeros((len(mutations_list),2*pow(2,number_generations)-2, number_mutations))
-  
-#     for idxt, temperature in tqdm(enumerate(temperaturelist)):
-#             date = today.strftime("%Y_%m_%d_")
-#             hour = startTime.strftime('%H_%M_%S_')
-#             Tree = Generate_tree(number_generations)
-#             starting_chain = np.zeros(number_spins, dtype = np.int8)
-#             # start from equilibrium chain
-#             starting_chain = Load_eq_sequence(path_to_eq_seq, temperature)
-#             Tree['0/1'] = starting_chain
-#             if save_chainsandmutations:
-#                 all_chains[idxt,0,:] = starting_chain
-#                 ct = 0
-#             for g in range(1,number_generations+1):  
-#                 list_parents = np.linspace(1,pow(2,g-1),pow(2,g-1), dtype = np.int16)
-#                 for parent in list_parents:
-#                     chain = Tree['{}/{}'.format(g-1,parent)]
-#                     newchain1,ml1 = Mutate(chain.copy(), number_mutations, temperature, matcontact)
-#                     newchain2,ml2 = Mutate(chain.copy(), number_mutations, temperature, matcontact)
-     
-#                     if save_chainsandmutations:
-#                         all_chains[idxt,ct+1,:] = newchain1
-#                         all_chains[idxt,ct+2,:] = newchain2
-#                         ct = ct+2
-#                     Tree['{}/{}'.format(g,2*parent-1)] = newchain1
-#                     Tree['{}/{}'.format(g,2*parent)] = newchain2
-#             for index_chain, child in enumerate(list(np.linspace(1,pow(2,number_generations),pow(2,number_generations),dtype = np.int16))):
-#                 final_chains[idxt,index_chain,:] = Tree['{}/{}'.format(number_generations,child)]
-            
-        
-#     path_store_data = './example/save_folder_example/' 
-#     folderpath = path_store_data + 'temperatures_{}_{}_mutation_{}_generations_{}_number_spins_{}_starteqchain_p{}/'.format(int(min(temperaturelist)),int(max(temperaturelist)),int(number_mutations),int(number_generations),int(number_spins),str(proba).replace('.','_'))
-#     if not os.path.exists(folderpath):
-#         os.makedirs(folderpath)
+                Tree['0/1'] = starting_chain
 
-    
-#     filename = folderpath + 'temperatures_{}_{}_mutation_{}_generations_{}_number_spins_{}_starteqchain_p{}_filenbr{}.h5'.format(int(min(temperaturelist)),int(max(temperaturelist)),int(number_mutations),int(number_generations),int(number_spins),str(proba).replace('.','_'),nbrfile)
-    
-#     file = h5py.File(filename, 'w')
-#     file.close()
-    
-#     para = [number_spins, number_mutations, number_generations,seed,proba,nbrfile]
-    
-#     file = h5py.File(filename, 'r+')
-#     file.create_dataset('Parameters', data = np.array(para))
-#     file.create_dataset('Matrix_contact', data = matcontact)
-#     file.create_dataset('Chains', data = final_chains, compression='gzip', compression_opts=9)
-#     file.create_dataset('Temperatures', data = np.array(temperaturelist))
-    
-#     if save_chainsandmutations:
-#         file.create_dataset('allchains', data = all_chains, compression='gzip', compression_opts=9)
-#     file.close()
+                if save_chainsandmutations:
+                    all_chains[idxm,0,:] = starting_chain
+
+                    ct = 0
+                for g in range(1,number_generations+1):
+
+                    list_parents = np.linspace(1,pow(2,g-1),pow(2,g-1), dtype = np.int16)
+                    # print('Generation',g)
+                    for parent in list_parents:
+                        # print('parent',parent)
+                        chain = Tree['{}/{}'.format(g-1,parent)]
+                        newchain1,ml1 = Mutate(chain.copy(), number_mutations, Temperature, matcontact)
+                        newchain2,ml2 = Mutate(chain.copy(), number_mutations, Temperature, matcontact)
+
+                        if save_chainsandmutations:
+                            all_chains[idxm,ct+1,:] = newchain1
+                            all_chains[idxm,ct+2,:] = newchain2
+                            savedmutations_list[idxm,ct,:] = ml1[:]
+                            savedmutations_list[idxm,ct+1,:] = ml2[:]
+                            ct = ct+2
+
+                        Tree['{}/{}'.format(g,2*parent-1)] = newchain1
+                        Tree['{}/{}'.format(g,2*parent)] = newchain2
+
+
+                for index_chain, child in enumerate(list(np.linspace(1,pow(2,number_generations),pow(2,number_generations),dtype = np.int16))):
+                    final_chains[idxm,index_chain,:] = Tree['{}/{}'.format(number_generations,child)]
+
+        ##########SAVE CHAINS, CREATES FOLDER IF NOT EXISTING FOR THE PARAMETERSs#######################
+
+        path_store_data = './example/save_folder_example/'
+        folderpath = path_store_data + 'mutations_{}_{}_temperature_{}_generations_{}_number_spins_{}_starteqchain_p{}/'.format(int(min(mutations_list)),int(max(mutations_list)),int(Temperature),int(number_generations),int(number_spins),str(proba).replace('.','_'))
+        if not os.path.exists(folderpath):
+            os.makedirs(folderpath)
+        filename = folderpath + 'mutations_{}_{}_temperature_{}_generations_{}_number_spins_{}_starteqchain_p{}_seed{}_filenbr{}.h5'.format(int(min(mutations_list)),int(max(mutations_list)),int(Temperature),int(number_generations),int(number_spins),str(proba).replace('.','_'),int(seed),nbrf)
+        file = h5py.File(filename, 'w')
+        file.close()
+        para = [number_spins, Temperature, number_generations,seed,proba]
+        file = h5py.File(filename, 'r+')
+        file.create_dataset('Parameters', data = np.array(para))
+        file.create_dataset('Matrix_contact', data = matcontact)
+        file.create_dataset('Chains', data = final_chains, compression='gzip', compression_opts=9)
+        file.create_dataset('Mutations', data = np.array(mutations_list))
+        if save_chainsandmutations:
+            file.create_dataset('allchains', data = all_chains, compression='gzip', compression_opts=9)
+            file.create_dataset('mutations', data = mutations_list, compression='gzip', compression_opts=9)
+        file.close()
+
+    ###############################################################################            
+    ##### VARY temperature instead of the number of mutation, uncomment
+    ##### the following section and comment the one above
+    ###############################################################################
+    ##number of realisations 
+    # number_averages = 10
+    ##number of mutations per branch in the phylogeny
+    # number_mutations = 5
+    ##number of generations in the phylogeny
+    # number_generations = 11
+    ##number of sites/spins in the graph
+    # number_spins = 200
+    # matcontact =  np.load('./contact_maps/N200p0_02/contactmat_n200p0_02.npy')
+    # proba = 0.02
+    ##path to the set of sequences at equilibrium, needed for the root of the phylogeny. Here an example is taken for the input but can be changed
+    ##by generating another dataset of equilibrium sequences.
+    # path_to_eq_seq = './example/equilibrium/2022_09_21_14_02_00_Nspins200_probagraph0_02_flips300_Nchains2048_seed_17_filenbr0.h5'
+    # #change the list of temperature below
+    # temperaturelist = [1,2,3,4.2,5,6,7]
+    # for nbrfile in range(0,number_averages):
+    #     seed = 3*(nbrfile+1)
+    #     random.seed(seed)
+    #     final_chains = np.zeros((len(temperaturelist),pow(2,number_generations),number_spins),dtype = np.int8)
+
+    #     save_chainsandmutations = False
+    #     if save_chainsandmutations:
+    #         all_chains = np.zeros((len(temperaturelist),2*pow(2,number_generations)-1,number_spins))  
+    #         # savedmutations_list = np.zeros((len(mutations_list),2*pow(2,number_generations)-2, number_mutations))
+
+    #     for idxt, temperature in tqdm(enumerate(temperaturelist)):
+    #             date = today.strftime("%Y_%m_%d_")
+    #             hour = startTime.strftime('%H_%M_%S_')
+    #             Tree = Generate_tree(number_generations)
+    #             starting_chain = np.zeros(number_spins, dtype = np.int8)
+    #             # start from equilibrium chain
+    #             starting_chain = Load_eq_sequence(path_to_eq_seq, temperature)
+    #             Tree['0/1'] = starting_chain
+    #             if save_chainsandmutations:
+    #                 all_chains[idxt,0,:] = starting_chain
+    #                 ct = 0
+    #             for g in range(1,number_generations+1):  
+    #                 list_parents = np.linspace(1,pow(2,g-1),pow(2,g-1), dtype = np.int16)
+    #                 for parent in list_parents:
+    #                     chain = Tree['{}/{}'.format(g-1,parent)]
+    #                     newchain1,ml1 = Mutate(chain.copy(), number_mutations, temperature, matcontact)
+    #                     newchain2,ml2 = Mutate(chain.copy(), number_mutations, temperature, matcontact)
+
+    #                     if save_chainsandmutations:
+    #                         all_chains[idxt,ct+1,:] = newchain1
+    #                         all_chains[idxt,ct+2,:] = newchain2
+    #                         ct = ct+2
+    #                     Tree['{}/{}'.format(g,2*parent-1)] = newchain1
+    #                     Tree['{}/{}'.format(g,2*parent)] = newchain2
+    #             for index_chain, child in enumerate(list(np.linspace(1,pow(2,number_generations),pow(2,number_generations),dtype = np.int16))):
+    #                 final_chains[idxt,index_chain,:] = Tree['{}/{}'.format(number_generations,child)]
+
+
+    #     path_store_data = './example/save_folder_example/' 
+    #     folderpath = path_store_data + 'temperatures_{}_{}_mutation_{}_generations_{}_number_spins_{}_starteqchain_p{}/'.format(int(min(temperaturelist)),int(max(temperaturelist)),int(number_mutations),int(number_generations),int(number_spins),str(proba).replace('.','_'))
+    #     if not os.path.exists(folderpath):
+    #         os.makedirs(folderpath)
+
+
+    #     filename = folderpath + 'temperatures_{}_{}_mutation_{}_generations_{}_number_spins_{}_starteqchain_p{}_filenbr{}.h5'.format(int(min(temperaturelist)),int(max(temperaturelist)),int(number_mutations),int(number_generations),int(number_spins),str(proba).replace('.','_'),nbrfile)
+
+    #     file = h5py.File(filename, 'w')
+    #     file.close()
+
+    #     para = [number_spins, number_mutations, number_generations,seed,proba,nbrfile]
+
+    #     file = h5py.File(filename, 'r+')
+    #     file.create_dataset('Parameters', data = np.array(para))
+    #     file.create_dataset('Matrix_contact', data = matcontact)
+    #     file.create_dataset('Chains', data = final_chains, compression='gzip', compression_opts=9)
+    #     file.create_dataset('Temperatures', data = np.array(temperaturelist))
+
+    #     if save_chainsandmutations:
+    #         file.create_dataset('allchains', data = all_chains, compression='gzip', compression_opts=9)
+    #     file.close()
 
 
