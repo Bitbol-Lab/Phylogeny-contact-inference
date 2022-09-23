@@ -563,110 +563,110 @@ def FPShortestPath(fp,G, Neighbors_dict):
 
 
 ############################# MAIN ####################################
+if __name__ == '__main__':
+    #path to the folder that contains an example of sequences to compute the G score, can be changed acccordingly.
+    pathtodatafolder = './example/Gscore_computation/sequences/'
+    filelist = os.listdir(pathtodatafolder)
 
-#path to the folder that contains an example of sequences to compute the G score, can be changed acccordingly.
-pathtodatafolder = './example/Gscore_computation/sequences/'
-filelist = os.listdir(pathtodatafolder)
+    #path to the contact maps used in the paper
+    pathcontacmat = './contact_maps/N200p0_02/contactmat_n200p0_02.npy'
 
-#path to the contact maps used in the paper
-pathcontacmat = './contact_maps/N200p0_02/contactmat_n200p0_02.npy'
+    #path to the folder that contains the plmDCA inference of the sequences mentioned above using the plmDCA package, can be changed acccordingly.
+    pathtoplmcouplingsfolder = './example/Gscore_computation/plminference/'
+    couplingsfilelist = os.listdir(pathtoplmcouplingsfolder)
 
-#path to the folder that contains the plmDCA inference of the sequences mentioned above using the plmDCA package, can be changed acccordingly.
-pathtoplmcouplingsfolder = './example/Gscore_computation/plminference/'
-couplingsfilelist = os.listdir(pathtoplmcouplingsfolder)
-   
-pseudocount = 0.5
-pc_mi = 0.01
-bl_abs = True
-bl_apc = False
-number_generations = 11
-indextemperature = 1
-mutation = 5
+    pseudocount = 0.5
+    pc_mi = 0.01
+    bl_abs = True
+    bl_apc = False
+    number_generations = 11
+    indextemperature = 1
+    mutation = 5
 
-##path where the data is saved, everything is saved in there.
-path_save = './example/save_folder_example/'
-
-
+    ##path where the data is saved, everything is saved in there.
+    path_save = './example/save_folder_example/'
 
 
-for f in filelist:
-    if f.startswith('.'):
-        filelist.remove(f)
-        
-for f in couplingsfilelist:
-    if f.startswith('.'):
-        couplingsfilelist.remove(f)
-        
-allcouplingmf_manyrealisations = []
-earliestmutscoreallpairs_manyrealisations = []
-allcouplingC_manyrealisations = []
-allcouplingMI_manyrealisations = []
-allcouplingJ_manyrealisationsplmdca = []
-conservationallpairs_manyrealisations = []
 
-nbrfiles =len(filelist)
-from tqdm import tqdm
-for f in tqdm(filelist):
-    pathtofile = pathtodatafolder+f
-    
-    nbrfile = f[f.find('filenbr')+len('filenbr'):f.find('.')]
-    strtofind = 'filenbr' + nbrfile + '.'
-    filecoupling = ''
 
-    
-    for ftmp in couplingsfilelist:
-        if strtofind in ftmp:
-            filecoupling = ftmp
+    for f in filelist:
+        if f.startswith('.'):
+            filelist.remove(f)
 
-    pathtocoupling = pathtoplmcouplingsfolder + filecoupling
+    for f in couplingsfilelist:
+        if f.startswith('.'):
+            couplingsfilelist.remove(f)
 
-    Jtensor = OpenJuliaFile(pathtocoupling)
-    Jtemperature = Jtensor[:,:,:,:,indextemperature]
+    allcouplingmf_manyrealisations = []
+    earliestmutscoreallpairs_manyrealisations = []
+    allcouplingC_manyrealisations = []
+    allcouplingMI_manyrealisations = []
+    allcouplingJ_manyrealisationsplmdca = []
+    conservationallpairs_manyrealisations = []
 
-    Jtemperature = zero_sum_gauge_frob_scores(Jtemperature,bl_apc)
+    nbrfiles =len(filelist)
+    from tqdm import tqdm
+    for f in tqdm(filelist):
+        pathtofile = pathtodatafolder+f
 
-    matrixcontact, chainst, temperatures, allchains = OpenDataPhylogenyDatasetScanMfixedT(pathtofile, pathcontacmat)
-    number_spins = matrixcontact.shape[0]
+        nbrfile = f[f.find('filenbr')+len('filenbr'):f.find('.')]
+        strtofind = 'filenbr' + nbrfile + '.'
+        filecoupling = ''
 
-    allcouplingmf, earliestmutscoreallpairs,allcouplingsC,allpairs,allcouplingplm,allcouplingsMI = AllpairsScore(number_spins,allchains[indextemperature,:,:],number_generations,chainst[indextemperature,:,:],pseudocount,bl_abs,Jtemperature,pc_mi,bl_apc)
-    
-    allcouplingMI_manyrealisations = allcouplingMI_manyrealisations + allcouplingsMI
 
-    allcouplingmf_manyrealisations = allcouplingmf_manyrealisations +  allcouplingmf
+        for ftmp in couplingsfilelist:
+            if strtofind in ftmp:
+                filecoupling = ftmp
 
-    allcouplingJ_manyrealisationsplmdca = allcouplingJ_manyrealisationsplmdca + allcouplingplm
-       
-    allcouplingC_manyrealisations = allcouplingC_manyrealisations + allcouplingsC
-    
-    earliestmutscoreallpairs_manyrealisations = earliestmutscoreallpairs_manyrealisations + earliestmutscoreallpairs
-    
-    conservationallpairs_manyrealisations = conservationallpairs_manyrealisations + ConservationPairsListEntropy(allpairs, chainst[indextemperature,:,:])
-    
+        pathtocoupling = pathtoplmcouplingsfolder + filecoupling
 
-np.save(path_save + 'CouplingsCORR_Allpairs.npy',allcouplingC_manyrealisations)
-np.save(path_save + 'CouplingMF_Allpairs.npy',allcouplingmf_manyrealisations)
-np.save(path_save + 'CouplingPLM__Allpairs.npy',allcouplingJ_manyrealisationsplmdca)
-np.save(path_save + 'couplingsMI_Allpairs.npy',allcouplingMI_manyrealisations)
+        Jtensor = OpenJuliaFile(pathtocoupling)
+        Jtemperature = Jtensor[:,:,:,:,indextemperature]
 
-np.save(path_save + 'EMG_scores_abs_apc.npy',earliestmutscoreallpairs_manyrealisations)
+        Jtemperature = zero_sum_gauge_frob_scores(Jtemperature,bl_apc)
 
-ViolinPlot(earliestmutscoreallpairs_manyrealisations,allcouplingMI_manyrealisations, temperatures[indextemperature],mutation,'Allcouplings Mij {} realisations'.format(nbrfiles),'\n ',number_generations,0.3,0.3)
+        matrixcontact, chainst, temperatures, allchains = OpenDataPhylogenyDatasetScanMfixedT(pathtofile, pathcontacmat)
+        number_spins = matrixcontact.shape[0]
 
-####### EXAMPLE GRAPH PROPERTIES FOR ALL PAIRS IN THE GRAPH ########
-pathcontactmat = './contact_maps/N200p0_02/contactmat_n200p0_02.npy'
-matrix_contact = np.load(pathcontacmat)
-number_spins = matrix_contact.shape[0]
-G = nx.from_numpy_matrix(matrix_contact)
-Neighbors_dict = {site: FindNeighbors(site, matrix_contact, number_spins) for site in range(0,number_spins)}
+        allcouplingmf, earliestmutscoreallpairs,allcouplingsC,allpairs,allcouplingplm,allcouplingsMI = AllpairsScore(number_spins,allchains[indextemperature,:,:],number_generations,chainst[indextemperature,:,:],pseudocount,bl_abs,Jtemperature,pc_mi,bl_apc)
 
-allpairs_graph = []
-for j in range(0,number_spins):
-    for i in range(j+1,number_spins):
-        allpairs_graph.append([j,i])
-        
-lengthSP, numberSP = FPShortestPath(allpairs_graph,G, Neighbors_dict)
-nbrkeys = len(Neighbors_dict.keys())
-listofNN = [len(Neighbors_dict[k]) for k in range(nbrkeys)]
-listofNN = np.array(listofNN)
-print('Shortest path for each pair in the allpairs_graph list', lengthSP)
-print('Number of NN for each site: ',listofNN)
+        allcouplingMI_manyrealisations = allcouplingMI_manyrealisations + allcouplingsMI
+
+        allcouplingmf_manyrealisations = allcouplingmf_manyrealisations +  allcouplingmf
+
+        allcouplingJ_manyrealisationsplmdca = allcouplingJ_manyrealisationsplmdca + allcouplingplm
+
+        allcouplingC_manyrealisations = allcouplingC_manyrealisations + allcouplingsC
+
+        earliestmutscoreallpairs_manyrealisations = earliestmutscoreallpairs_manyrealisations + earliestmutscoreallpairs
+
+        conservationallpairs_manyrealisations = conservationallpairs_manyrealisations + ConservationPairsListEntropy(allpairs, chainst[indextemperature,:,:])
+
+
+    np.save(path_save + 'CouplingsCORR_Allpairs.npy',allcouplingC_manyrealisations)
+    np.save(path_save + 'CouplingMF_Allpairs.npy',allcouplingmf_manyrealisations)
+    np.save(path_save + 'CouplingPLM__Allpairs.npy',allcouplingJ_manyrealisationsplmdca)
+    np.save(path_save + 'couplingsMI_Allpairs.npy',allcouplingMI_manyrealisations)
+
+    np.save(path_save + 'EMG_scores_abs_apc.npy',earliestmutscoreallpairs_manyrealisations)
+
+    ViolinPlot(earliestmutscoreallpairs_manyrealisations,allcouplingMI_manyrealisations, temperatures[indextemperature],mutation,'Allcouplings Mij {} realisations'.format(nbrfiles),'\n ',number_generations,0.3,0.3)
+
+    ####### EXAMPLE GRAPH PROPERTIES FOR ALL PAIRS IN THE GRAPH ########
+    pathcontactmat = './contact_maps/N200p0_02/contactmat_n200p0_02.npy'
+    matrix_contact = np.load(pathcontacmat)
+    number_spins = matrix_contact.shape[0]
+    G = nx.from_numpy_matrix(matrix_contact)
+    Neighbors_dict = {site: FindNeighbors(site, matrix_contact, number_spins) for site in range(0,number_spins)}
+
+    allpairs_graph = []
+    for j in range(0,number_spins):
+        for i in range(j+1,number_spins):
+            allpairs_graph.append([j,i])
+
+    lengthSP, numberSP = FPShortestPath(allpairs_graph,G, Neighbors_dict)
+    nbrkeys = len(Neighbors_dict.keys())
+    listofNN = [len(Neighbors_dict[k]) for k in range(nbrkeys)]
+    listofNN = np.array(listofNN)
+    print('Shortest path for each pair in the allpairs_graph list', lengthSP)
+    print('Number of NN for each site: ',listofNN)
