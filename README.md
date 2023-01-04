@@ -1,4 +1,6 @@
 # Phylogeny-contact-inference
+[![DOI](https://zenodo.org/badge/537553837.svg)](https://zenodo.org/badge/latestdoi/537553837)
+
 ## Getting started
 
 Clone this repository on your local machine by running
